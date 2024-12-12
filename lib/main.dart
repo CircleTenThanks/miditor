@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vibration/vibration.dart';
 import 'dart:async';
 
 void main() {
@@ -214,7 +215,7 @@ class _MyHomePageState extends State<MyHomePage> {
               _buildKeypadButton('7'),
               _buildKeypadButton('0'),
               const SizedBox(width: 60),
-              _buildKeypadButton('b'),
+              _buildKeypadButton('♭'),
             ],
           ),
           Row(
@@ -274,7 +275,10 @@ Widget _buildKeypadButton(String key) {
     width: 60,
     height: 60,
     child: TextButton(
-      onPressed: () {
+      onPressed: () async {
+        if (await Vibration.hasVibrator() ?? false) {
+          Vibration.vibrate(duration: 50);
+        }
         _textController.text = _textController.text + key;
       },
       child: Text(
