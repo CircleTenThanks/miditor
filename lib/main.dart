@@ -92,7 +92,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void _resetSelection() {
     _selectedIndex = null;
     _textController.clear();
-    _focusNode.requestFocus();
+    if (_focusNode.hasFocus) {
+      _focusNode.requestFocus();
+    }
   }
 
   // リストアイテムのウィジェットを生成するメソッド
