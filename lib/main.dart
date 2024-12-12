@@ -57,6 +57,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final List<Map<String, dynamic>> _items = [];
   final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   int? _selectedIndex;
 
   @override
@@ -90,12 +91,19 @@ class _MyHomePageState extends State<MyHomePage> {
                             },
                           ),
                           title: Text(_items[index]['text']),
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = index; 
+                              _textController.text = _items[index]['text']; 
+                            });
+                          },
                         );
                       },
                     ),
                   ),
                   TextField(
                     controller: _textController,
+                    focusNode: _focusNode,
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       hintText: '入力してください...',
@@ -118,7 +126,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           }
                           _textController.clear(); // テキストフィールドをクリア
                         }
+                        _selectedIndex = null; // ラジオボタンを未選択にする
                       });
+                      _focusNode.requestFocus(); // フォーカスを維持
                     },
                   ),
                 ],
@@ -165,6 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     _textController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 }
