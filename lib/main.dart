@@ -55,75 +55,127 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // このsetStateの呼び出しは、Flutterフレームワークに対して
-      // このStateで何かが変更されたことを通知します。これにより
-      // 下のbuildメソッドが再実行され、表示が更新された値を
-      // 反映するようになります。もしsetState()を呼び出さずに
-      // _counterを変更した場合、buildメソッドは再度呼び出されず、
-      // 何も変化が見られないことになります。
-      _counter++;
-    });
-  }
+  final List<Map<String, dynamic>> _items = [];
+  final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  int? _selectedIndex;
 
   @override
   Widget build(BuildContext context) {
-    // このメソッドは、上記の_incrementCounterメソッドなどで
-    // setStateが呼び出されるたびに再実行されます。
-    //
-    // Flutterフレームワークは、buildメソッドの再実行を高速化
-    // するように最適化されています。そのため、更新が必要な
-    // 部分だけを再構築でき、ウィジェットのインスタンスを
-    // 個別に変更する必要はありません。
     return Scaffold(
       appBar: AppBar(
-        // お試し: ここの色を特定の色（たとえばColors.amber）に
-        // 変更して、ホットリロードを実行してみてください。
-        // AppBarの色が変わる一方で、他の色は同じままなことが
-        // わかります。
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // ここでは、App.buildメソッドで作成されたMyHomePageオブジェクト
-        // から値を取得し、それをアプリバーのタイトルとして使用します。
         title: Text(widget.title),
       ),
-      body: Center(
-        // Centerはレイアウトウィジェットです。単一の子要素を受け取り、
-        // 親の中央に配置します。
-        child: Column(
-          // Columnもレイアウトウィジェットです。子要素のリストを受け取り、
-          // それらを垂直に配置します。デフォルトでは、水平方向に子要素に
-          // フィットするようにサイズを調整し、親と同じ高さになろうとします。
-          //
-          // Columnには、サイズ調整方法や子要素の配置方法を制御する
-          // さまざまなプロパティがあります。ここではmainAxisAlignmentを
-          // 使用して子要素を垂直方向に中央揃えにしています。
-          // Columnは垂直なので、主軸は垂直軸です（交差軸は水平軸に
-          // なります）。
-          //
-          // お試し: 「デバッグペイント」を有効にしてみてください
-          // （IDEで「Toggle Debug Paint」アクションを選択するか、
-          // コンソールで「p」を押してください）。各ウィジェットの
-          // ワイヤーフレームが表示されます。
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+      body: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _items.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          leading: Radio<int>(
+                            value: index,
+                            groupValue: _selectedIndex,
+                            onChanged: (int? value) {
+                              setState(() {
+                                _selectedIndex = value;
+                                // 選択された場合、テキストフィールドにそのテキストを設定
+                                _textController.text = _items[index]['text'];
+                              });
+                            },
+                          ),
+                          title: Text(_items[index]['text']),
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = index; 
+                              _textController.text = _items[index]['text']; 
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  TextField(
+                    controller: _textController,
+                    focusNode: _focusNode,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: '入力してください...',
+                    ),
+                    style: const TextStyle(fontSize: 16),
+                    onSubmitted: (text) {
+                      setState(() {
+                        if (text.isEmpty) {
+                          // 空欄の場合、選択されたアイテムを削除
+                          if (_selectedIndex != null) {
+                            _items.removeAt(_selectedIndex!);
+                            _selectedIndex = null; // 選択をリセット
+                          }
+                        } else {
+                          // 新規アイテムを追加または更新
+                          if (_selectedIndex != null) {
+                            _items[_selectedIndex!]['text'] = text; // 更新
+                          } else {
+                            _items.add({'text': text, 'isChecked': false}); // 新規追加
+                          }
+                          _textController.clear(); // テキストフィールドをクリア
+                        }
+                        _selectedIndex = null; // ラジオボタンを未選択にする
+                      });
+                      _focusNode.requestFocus(); // フォーカスを維持
+                    },
+                  ),
+                ],
+              ),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          Container(
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: Colors.grey.shade300)),
             ),
-          ],
-        ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.play_arrow),
+                    onPressed: () {/* 再生処理 */},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.pause),
+                    onPressed: () {/* 一時停止処理 */},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.stop),
+                    onPressed: () {/* 停止処理 */},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
+        onPressed: () {
+          // 新規作成などの処理
+        },
+        tooltip: '新規作成',
         child: const Icon(Icons.add),
-      ), // この末尾のカンマでbuildメソッドの自動フォーマットが見やすくなります。
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
   }
 }
