@@ -144,13 +144,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       hintText: '入力してください...',
                     ),
                     style: const TextStyle(fontSize: 16),
-                    keyboardType: TextInputType.number,
-                    onSubmitted: _addOrUpdateItem,
                   ),
                 ],
               ),
             ),
           ),
+          _buildCustomKeypad(), // カスタムキーパッドを追加
           _buildControlBar(),
         ],
       ),
@@ -186,6 +185,65 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {/* 停止処理 */},
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // カスタムキーパッドを生成するメソッド
+  Widget _buildCustomKeypad() {
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: ['1', '2', '3', '⌫'].map((key) => _buildKeypadButton(key)).toList(),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: ['4', '5', '6', '#'].map((key) => _buildKeypadButton(key)).toList(),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              _buildKeypadButton('7'),
+              _buildKeypadButton('0'),
+              const SizedBox(width: 60),
+              _buildKeypadButton('b'),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildKeypadButton('_'),
+              _buildKeypadButton('-'),
+              _buildKeypadButton('¯'),
+              const SizedBox(width: 60),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKeypadButton(String key) {
+    return SizedBox(
+      width: 60,
+      height: 60,
+      child: TextButton(
+        onPressed: () {
+          if (key == '⌫') {
+            if (_textController.text.isNotEmpty) {
+              _textController.text = _textController.text.substring(0, _textController.text.length - 1);
+            }
+          } else {
+            _textController.text = _textController.text + key;
+          }
+        },
+        child: Text(
+          key,
+          style: const TextStyle(fontSize: 24),
         ),
       ),
     );
