@@ -60,6 +60,62 @@ class _MyHomePageState extends State<MyHomePage> {
   final FocusNode _focusNode = FocusNode();
   int? _selectedIndex;
 
+  // アイテムの追加または更新を行うメソッド
+  void _addOrUpdateItem(String text) {
+    if (text.isEmpty) {
+      _deleteSelectedItem();
+    } else {
+      setState(() {
+        if (_selectedIndex != null) {
+          _items[_selectedIndex!]['text'] = text;
+        } else {
+          _items.add({'text': text, 'isChecked': false});
+        }
+        _resetSelection();
+      });
+    }
+  }
+
+  // 選択中のアイテムを削除するメソッド
+  void _deleteSelectedItem() {
+    if (_selectedIndex != null) {
+      setState(() {
+        _items.removeAt(_selectedIndex!);
+        _resetSelection();
+      });
+    }
+  }
+
+  // 選択状態をリセットするメソッド
+  void _resetSelection() {
+    _selectedIndex = null;
+    _textController.clear();
+    _focusNode.requestFocus();
+  }
+
+  // リストアイテムのウィジェットを生成するメソッド
+  Widget _buildListItem(int index) {
+    return ListTile(
+      leading: Radio<int>(
+        value: index,
+        groupValue: _selectedIndex,
+        onChanged: _onItemSelected(index),
+      ),
+      title: Text(_items[index]['text']),
+      onTap: () => _onItemSelected(index)(index),
+    );
+  }
+
+  // アイテム選択時の処理
+  ValueChanged<int?> _onItemSelected(int index) {
+    return (int? value) {
+      setState(() {
+        _selectedIndex = value;
+        _textController.text = _items[index]['text'];
+      });
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,28 +133,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   Expanded(
                     child: ListView.builder(
                       itemCount: _items.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          leading: Radio<int>(
-                            value: index,
-                            groupValue: _selectedIndex,
-                            onChanged: (int? value) {
-                              setState(() {
-                                _selectedIndex = value;
-                                // 選択された場合、テキストフィールドにそのテキストを設定
-                                _textController.text = _items[index]['text'];
-                              });
-                            },
-                          ),
-                          title: Text(_items[index]['text']),
-                          onTap: () {
-                            setState(() {
-                              _selectedIndex = index; 
-                              _textController.text = _items[index]['text']; 
-                            });
-                          },
-                        );
-                      },
+                      itemBuilder: (context, index) => _buildListItem(index),
                     ),
                   ),
                   TextField(
@@ -110,65 +145,48 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     style: const TextStyle(fontSize: 16),
                     keyboardType: TextInputType.number,
-                    onSubmitted: (text) {
-                      setState(() {
-                        if (text.isEmpty) {
-                          // 空欄の場合、選択されたアイテムを削除
-                          if (_selectedIndex != null) {
-                            _items.removeAt(_selectedIndex!);
-                            _selectedIndex = null; // 選択をリセット
-                          }
-                        } else {
-                          // 新規アイテムを追加または更新
-                          if (_selectedIndex != null) {
-                            _items[_selectedIndex!]['text'] = text; // 更新
-                          } else {
-                            _items.add({'text': text, 'isChecked': false}); // 新規追加
-                          }
-                          _textController.clear(); // テキストフィールドをクリア
-                        }
-                        _selectedIndex = null; // ラジオボタンを未選択にする
-                      });
-                      _focusNode.requestFocus(); // フォーカスを維持
-                    },
+                    onSubmitted: _addOrUpdateItem,
                   ),
                 ],
               ),
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.grey.shade300)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.play_arrow),
-                    onPressed: () {/* 再生処理 */},
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.pause),
-                    onPressed: () {/* 一時停止処理 */},
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.stop),
-                    onPressed: () {/* 停止処理 */},
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _buildControlBar(),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // 新規作成などの処理
-        },
-        tooltip: '新規作成',
+        onPressed: () => _addOrUpdateItem(_textController.text),
+        tooltip: 'TODO:ツールチップ',
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  // コントロールバーを生成するメソッド
+  Widget _buildControlBar() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.play_arrow),
+              onPressed: () {/* 再生処理 */},
+            ),
+            IconButton(
+              icon: const Icon(Icons.pause),
+              onPressed: () {/* 一時停止処理 */},
+            ),
+            IconButton(
+              icon: const Icon(Icons.stop),
+              onPressed: () {/* 停止処理 */},
+            ),
+          ],
+        ),
       ),
     );
   }
