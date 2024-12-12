@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         //
         // これは値だけでなくコードにも適用されます：
         // ほとんどのコード変更はホットリロードだけでテストできます。
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0x005ABDE3)),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'miditor'),
