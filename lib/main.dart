@@ -109,6 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       hintText: '入力してください...',
                     ),
                     style: const TextStyle(fontSize: 16),
+                    keyboardType: TextInputType.number,
                     onSubmitted: (text) {
                       setState(() {
                         if (text.isEmpty) {
