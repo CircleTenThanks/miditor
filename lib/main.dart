@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 void main() {
   runApp(const MyApp());
@@ -59,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   int? _selectedIndex;
+  Timer? _backspaceTimer;
 
   // アイテムの追加または更新を行うメソッド
   void _addOrUpdateItem(String text) {
@@ -227,30 +229,63 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildKeypadButton(String key) {
+Widget _buildKeypadButton(String key) {
+  if (key == '⌫') {
     return SizedBox(
       width: 60,
       height: 60,
-      child: TextButton(
-        onPressed: () {
-          if (key == '⌫') {
+      child: GestureDetector(
+        onLongPressStart: (_) {
+          // ロングプレス開始時に定期的に文字を削除
+          Timer.periodic(const Duration(milliseconds: 100), (timer) {
             if (_textController.text.isNotEmpty) {
-              _textController.text = _textController.text.substring(0, _textController.text.length - 1);
+              setState(() {
+                _textController.text = _textController.text.substring(0, _textController.text.length - 1);
+              });
+            } else {
+              timer.cancel();
             }
-          } else {
-            _textController.text = _textController.text + key;
-          }
+          });
         },
-        child: Text(
-          key,
-          style: const TextStyle(fontSize: 24),
+        onLongPressEnd: (_) {
+          // ロングプレス終了時にタイマーをキャンセル
+          _backspaceTimer?.cancel();
+        },
+        child: TextButton(
+          onPressed: () {
+            if (_textController.text.isNotEmpty) {
+              setState(() {
+                _textController.text = _textController.text.substring(0, _textController.text.length - 1);
+              });
+            }
+          },
+          child: const Text(
+            '⌫',
+            style: TextStyle(fontSize: 24),
+          ),
         ),
       ),
     );
   }
+  
+  return SizedBox(
+    width: 60,
+    height: 60,
+    child: TextButton(
+      onPressed: () {
+        _textController.text = _textController.text + key;
+      },
+      child: Text(
+        key,
+        style: const TextStyle(fontSize: 24),
+      ),
+    ),
+  );
+}
 
   @override
   void dispose() {
+    _backspaceTimer?.cancel();
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
