@@ -235,99 +235,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  // オーバーレイを表示
-  void _showOverlay(BuildContext context, Offset position, String key) {
-    _overlayEntry?.remove();
-    _overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Positioned(
-            left: position.dx - 120,  // 横方向の位置
-            top: position.dy - 40,    // 縦方向の位置
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                width: 180,  // オーバーレイの幅
-                height: 180, // オーバーレイの高さ
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(90),
-                ),
-                child: Stack(
-                  children: [
-                    // 上
-                    Positioned(
-                      top: 10,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Text(
-                          '$key`',
-                          style: const TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                      ),
-                    ),
-                    // 下
-                    Positioned(
-                      bottom: 10,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Text(
-                          '$key,',
-                          style: const TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                      ),
-                    ),
-                    // 左
-                    Positioned(
-                      left: 10,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(
-                        child: Text(
-                          '$key<',
-                          style: const TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                      ),
-                    ),
-                    // 右
-                    Positioned(
-                      right: 10,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(
-                        child: Text(
-                          '$key>',
-                          style: const TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                      ),
-                    ),
-                    // 中央
-                    Center(
-                      child: Text(
-                        key,
-                        style: const TextStyle(color: Colors.white, fontSize: 24),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    Overlay.of(context).insert(_overlayEntry!);
-  }
-
-  // オーバーレイを非表示にするメソッド
-  void _hideOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-  }
-
   Widget _buildKeypadButton(String key) {
   if (key == '⌫') {
     return SizedBox(
@@ -373,63 +280,116 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (context) => SizedBox(
         width: 60,
         height: 60,
-        child: GestureDetector(
-          onTapDown: (details) {
-            final RenderBox button = context.findRenderObject() as RenderBox;
-            final Offset position = button.localToGlobal(details.localPosition);
-            _showOverlay(
-              context,
-              Offset(
-                position.dx + 30, // ボタンの中心に調整
-                position.dy - 60  // オーバーレイがボタンの上に表示されるように調整
+        child: Stack(
+          children: [
+            GestureDetector(
+              onPanStart: (details) {
+                setState(() {
+                  _currentKey = key;
+                });
+              },
+              onPanEnd: (details) async {
+                setState(() {
+                  _currentKey = null;
+                });
+                if (await Vibration.hasVibrator() ?? false) {
+                  Vibration.vibrate(duration: 50);
+                }
+                
+                final double dx = details.velocity.pixelsPerSecond.dx.abs();
+                final double dy = details.velocity.pixelsPerSecond.dy.abs();
+                const double minVelocity = 100.0;
+                
+                if (dx > minVelocity || dy > minVelocity) {
+                  if (dy > dx) {
+                    if (details.velocity.pixelsPerSecond.dy > 0) {
+                      _textController.text = '${_textController.text}$key,';
+                    } else {
+                      _textController.text = '${_textController.text}$key`';
+                    }
+                  } else {
+                    if (details.velocity.pixelsPerSecond.dx > 0) {
+                      _textController.text = '${_textController.text}$key>';
+                    } else {
+                      _textController.text = '${_textController.text}$key<';
+                    }
+                  }
+                } else {
+                  _textController.text = '${_textController.text}$key';
+                }
+              },
+              onTapUp: (_) {
+                setState(() {
+                  _currentKey = null;
+                });
+                _textController.text = '${_textController.text}$key';
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    key,
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                ),
               ),
-              key
-            );
-          },
-          onTapUp: (_) {
-            _hideOverlay();
-            _textController.text = '${_textController.text}$key';  // フリックなしの場合は数字のみを追加
-          },
-          onPanUpdate: (details) {
-            // フリック中の処理（必要に応じて）
-          },
-          onPanEnd: (details) async {
-            _hideOverlay();
-            if (await Vibration.hasVibrator() ?? false) {
-              Vibration.vibrate(duration: 50);
-            }
-            
-            if (details.velocity.pixelsPerSecond.dy.abs() > 
-                details.velocity.pixelsPerSecond.dx.abs()) {
-              // 垂直方向のフリック
-              if (details.velocity.pixelsPerSecond.dy > 0) {
-                _textController.text = '${_textController.text}$key,';
-              } else {
-                _textController.text = '${_textController.text}$key`';
-              }
-            } else {
-              // 水平方向のフリック
-              if (details.velocity.pixelsPerSecond.dx > 0) {
-                _textController.text = '${_textController.text}$key>';
-              } else {
-                _textController.text = '${_textController.text}$key<';
-              }
-            }
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
             ),
-            child: Center(
-              child: Text(
-                key,
-                style: const TextStyle(fontSize: 24),
+            if (_currentKey == key) ...[
+              // 上のプレビュー
+              Positioned(
+                top: -30,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Text(
+                    '$key`',
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                ),
               ),
-            ),
-          ),
+              // 下のプレビュー
+              Positioned(
+                bottom: -30,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Text(
+                    '$key,',
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                ),
+              ),
+              // 左のプレビュー
+              Positioned(
+                left: -30,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Text(
+                    '$key<',
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                ),
+              ),
+              // 右のプレビュー
+              Positioned(
+                right: -30,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Text(
+                    '$key>',
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
-      )
+      ),
     );
   }
     
@@ -453,7 +413,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    _hideOverlay(); // オーバーレイを確実に削除
     _backspaceTimer?.cancel();
     _textController.dispose();
     _focusNode.dispose();
