@@ -210,7 +210,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: ['4', '5', '6', '#'].map((key) => _buildKeypadButton(key)).toList(),
+            children: ['4', '5', '6', '>'].map((key) => _buildKeypadButton(key)).toList(),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -218,15 +218,15 @@ class _MyHomePageState extends State<MyHomePage> {
               _buildKeypadButton('7'),
               _buildKeypadButton('0'),
               const SizedBox(width: 60),
-              _buildKeypadButton('♭'),
+              _buildKeypadButton('<'),
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildKeypadButton('_'),
+              const SizedBox(width: 60),
               _buildKeypadButton('-'),
-              _buildKeypadButton('¯'),
+              _buildKeypadButton('.'),
               const SizedBox(width: 60),
             ],
           ),
@@ -388,7 +388,7 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           onTapUp: (_) {
             _hideOverlay();
-            _textController.text = _textController.text + _currentKey!;
+            _textController.text = '${_textController.text}$key';  // フリックなしの場合は数字のみを追加
           },
           onPanUpdate: (details) {
             // フリック中の処理（必要に応じて）
