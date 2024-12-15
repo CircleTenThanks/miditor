@@ -271,6 +271,58 @@ Widget _buildKeypadButton(String key) {
     );
   }
   
+  // 数字キー（1-7）の場合はフリック入力に対応
+  if (RegExp(r'^[1-7]$').hasMatch(key)) {
+    return SizedBox(
+      width: 60,
+      height: 60,
+      child: GestureDetector(
+        onTap: () async {
+          if (await Vibration.hasVibrator() ?? false) {
+            Vibration.vibrate(duration: 50);
+          }
+          _textController.text = _textController.text + key;
+        },
+        onVerticalDragEnd: (details) async {
+          if (await Vibration.hasVibrator() ?? false) {
+            Vibration.vibrate(duration: 50);
+          }
+          if (details.velocity.pixelsPerSecond.dy > 0) {
+            // 下フリック
+            _textController.text = '${_textController.text}$key,';
+          } else if (details.velocity.pixelsPerSecond.dy < 0) {
+            // 上フリック
+            _textController.text = '${_textController.text}$key`';
+          }
+        },
+        onHorizontalDragEnd: (details) async {
+          if (await Vibration.hasVibrator() ?? false) {
+            Vibration.vibrate(duration: 50);
+          }
+          if (details.velocity.pixelsPerSecond.dx > 0) {
+            // 右フリック
+            _textController.text = '${_textController.text}$key>';
+          } else if (details.velocity.pixelsPerSecond.dx < 0) {
+            // 左フリック
+            _textController.text = '${_textController.text}$key<';
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              key,
+              style: const TextStyle(fontSize: 24),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
   return SizedBox(
     width: 60,
     height: 60,
